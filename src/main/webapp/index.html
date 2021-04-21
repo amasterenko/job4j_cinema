@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <title>Cinema</title>
+</head>
+<body>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<div class="container">
+    <div class="row pt-3">
+        <h4>
+            Бронирование мест на сеанс
+        </h4>
+        <table class="table table-bordered">
+            <thead>
+            <tr id="header">
+                <th style="width: 120px;">Ряд / Место</th>
+            </tr>
+            </thead>
+            <tbody id="body">
+            </tbody>
+        </table>
+    </div>
+    <div class="row float-right">
+        <button type="button" class="btn btn-success">Оплатить</button>
+    </div>
+    <div class="row" id="msg"></div>
+</div>
+<script>
+    $(document).ready(initHall());
+    function initHall() {
+        $.ajax({
+            type: 'GET',
+            url: 'hall.do',
+            dataType: 'json',
+        }).done(function (data) {
+            let rows = data.rows;
+            let seats = data.seats;
+            let interval = data.refreshInterval;
+            for (let j = 1; j <= seats; j++) {
+                $('#header').append('<th>' + j + '</th>');
+            }
+            for (let i = 1; i <= rows; i++) {
+                $('#body').append('<tr id="row' + i + '"><th>' + i + '</th>');
+                for (let j = 1; j <= seats; j++) {
+                    let seatId = i +'-'+ j;
+                    $('#row'+i).append(
+                        '<td><input type="radio" name="seat" value="'
+                        + seatId +'" id="rb-' + seatId + '" > Ряд ' + i + ', Место ' + j + '</td>');
+                }
+                $('#body').append('</tr>');
+            }
+            setInterval(setOccupiedSeats, interval);
+            setOccupiedSeats();
+        });
+
+    }
+    function setOccupiedSeats() {
+        $.ajax({
+            type: 'GET',
+            url: 'hall.do',
+            dataType: 'json',
+        }).done(function (data) {
+            let occupiedSeats = data.occupiedSeats;
+            for(let i = 0; i < occupiedSeats.length; i++) {
+                $('#rb-'+occupiedSeats[i]).attr('disabled', true);
+                $('#rb-'+occupiedSeats[i]).parent().addClass('table-secondary');
+                $('#rb-'+occupiedSeats[i]).parent().attr('title','Место занято');
+            }
+            if (occupiedSeats.length === data.rows * data.seats) {
+                $('button').hide();
+                $('button').parent().html('<div class="alert alert-warning">' +
+                    'К сожалению, все места заняты.'+ '</div>');
+            }
+        })
+    }
+    $('button').click(function() {
+        if($('input:radio:checked').length!==0) {
+            let row = $('input:radio:checked')[0].value.split("-")[0];
+            let seat = $('input:radio:checked')[0].value.split("-")[1];
+            localStorage.setItem("row", row);
+            localStorage.setItem("seat", seat);
+            window.location.href = 'payment.html';
+        } else {
+            $('#msg').html('<div class="alert alert-warning" >Пожалуйста, выберите место.</div>');
+        }
+    });
+</script>
+</body>
+</html>

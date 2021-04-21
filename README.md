@@ -9,17 +9,10 @@
 
 ###### User interface:
 - Main window:  
- 
-![ScreenShot](images/index.png)
- 
+![ScreenShot](images/index.PNG)
 - Payment window:  
-
-![ScreenShot](images/payment1.png) 
-
-- Payment window (success): 
-
-![ScreenShot](images/payment2.png)  
-
-- Payment window (fail): 
-
-![ScreenShot](images/payment3.png)  
+![ScreenShot](images/payment1.PNG) 
+- Payment window (success):  
+![ScreenShot](images/payment2.PNG)  
+- Payment window (fail):  
+![ScreenShot](images/payment3.PNG)  
