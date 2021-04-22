@@ -12,13 +12,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 /**
- * The class implements Store using Postgres.
+ * The class implements Store using Postgres db.
  *
  * @author AndrewMs
  * @version 1.0
@@ -62,11 +59,12 @@ public class PsqlStore implements Store {
     /**
      *
      * @param account Account object
-     * @return null if the account already exists in the db or Account object saved in the db
+     * @return Optional<Account> with empty value if the account already exists in the db
+     * or with Account object saved in the db.
      */
     @Override
-    public Account save(Account account) {
-        Account rslAccount = null;
+    public Optional<Account> save(Account account) {
+        Optional<Account> rsl = Optional.empty();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement(
                      "INSERT INTO account(username, email, phone) VALUES (?, ?, ?)",
@@ -78,33 +76,32 @@ public class PsqlStore implements Store {
             ps.execute();
             try (ResultSet id = ps.getGeneratedKeys()) {
                 if (id.next()) {
-                    rslAccount = account;
-                    rslAccount.setId(id.getInt(1));
+                    account.setId(id.getInt(1));
+                    rsl = Optional.of(account);
                 }
             }
         } catch (SQLException e) {
             LOG.error("An exception occurred: ", e);
         }
-        return rslAccount;
+        return rsl;
     }
 
     /**
      * If the ticket's account is already presents in the db the method
-     * tries to find the existed account using the phone field.
+     * tries to find the existed account using the "phone" field.
+     *
      * @param ticket Ticket object to save in the db.
-     * @return null if the ticket already presents in the db (unique sessionId, row, seat)
-     * or Ticket object saved
-     * in the db.
+     * @return Optional<Ticket> with empty value null if the ticket already presents
+     * in the db (unique sessionId, row, seat) or Ticket object saved in the db.
      */
     @Override
-    public Ticket save(Ticket ticket) {
-        Account account = ticket.getAccount();
-        account = save(account);
+    public Optional<Ticket> save(Ticket ticket) {
+        Optional<Ticket> rsl = Optional.empty();
+        Account account =  save(ticket.getAccount())
+                                .orElseGet(() -> findAccountByPhone(ticket.getAccount().getPhone())
+                                    .orElse(null));
         if (account == null) {
-            account = findAccountByPhone(ticket.getAccount().getPhone());
-        }
-        if (account == null) {
-            return null;
+            return rsl;
         }
         try (Connection cn = pool.getConnection();
              PreparedStatement ps =  cn.prepareStatement(
@@ -120,13 +117,13 @@ public class PsqlStore implements Store {
                 if (id.next()) {
                     ticket.setId(id.getInt(1));
                     ticket.setAccount(account);
+                    rsl = Optional.of(ticket);
                 }
             }
         } catch (Exception e) {
             LOG.error("An exception occurred: ", e);
-            return null;
         }
-        return ticket;
+        return rsl;
     }
 
     @Override
@@ -142,7 +139,7 @@ public class PsqlStore implements Store {
                                     result.getInt("session_id"),
                                     result.getInt("row"),
                                     result.getInt("cell"),
-                                    findAccountById(result.getInt("account_id"))
+                                    findAccountById(result.getInt("account_id")).orElse(null)
                             )
                     );
                 }
@@ -153,8 +150,8 @@ public class PsqlStore implements Store {
         return tickets;
     }
 
-    private Account findAccountByPhone(String phone) {
-        Account rslAccount = null;
+    private Optional<Account> findAccountByPhone(String phone) {
+        Optional<Account> rsl = Optional.empty();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement(
                      "SELECT * FROM account WHERE phone=?");
@@ -162,39 +159,41 @@ public class PsqlStore implements Store {
             ps.setString(1, phone);
             try (ResultSet result = ps.executeQuery()) {
                 if (result.next()) {
-                    rslAccount = new Account(
+                    rsl = Optional.of(new Account(
                             result.getInt("id"),
                             result.getString("username"),
                             result.getString("email"),
                             result.getString("phone")
-                    );
+                    ));
                 }
             }
         } catch (Exception e) {
             LOG.error("An exception occurred: ", e);
         }
-        return rslAccount;
+        return rsl;
     }
 
-    private Account findAccountById(int id) {
-        Account rslAccount = null;
+    private Optional<Account> findAccountById(int id) {
+        Optional<Account> rsl = Optional.empty();
         try (Connection cn = pool.getConnection();
              PreparedStatement ps = cn.prepareStatement("SELECT * FROM account WHERE id=?");
         ) {
             ps.setInt(1, id);
             try (ResultSet result = ps.executeQuery()) {
                 if (result.next()) {
-                    rslAccount = new Account(
-                            result.getInt("id"),
-                            result.getString("username"),
-                            result.getString("email"),
-                            result.getString("phone")
+                    rsl = Optional.of(
+                            new Account(
+                                    result.getInt("id"),
+                                    result.getString("username"),
+                                    result.getString("email"),
+                                    result.getString("phone")
+                            )
                     );
                 }
             }
         } catch (Exception e) {
             LOG.error("An exception occurred: ", e);
         }
-        return rslAccount;
+        return rsl;
     }
 }

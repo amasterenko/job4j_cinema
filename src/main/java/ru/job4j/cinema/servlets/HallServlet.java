@@ -21,25 +21,31 @@ import java.util.*;
  * If the seat with the specified session and row was already bought
  * the servlet replies with an error message|code.
  * If the message is successful, code 1 is used, on errors - 0.
+ * The servlet's init parameters:
+ * "rows" - the number of rows in the cinema hall,
+ * "seats" - the number of seats in the cinema hall,
+ * "sessionId" - the movie session id,
+ * "refreshInterval" - the data retry interval on the client (ms)
  *
  * @author AndrewMs
- * @version 1.0
+ * @version 1.1
  *
  */
 public class HallServlet extends HttpServlet {
-    private static int rows;
-    private static int cells;
-    private static int sessionId;
-    private static int refreshInterval;
     private static final Logger LOG = LoggerFactory.getLogger(HallServlet.class.getName());
-    private final Store store = PsqlStore.instOf();
+    private static final Store STORE = PsqlStore.instOf();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
         try {
-            Collection<Ticket> tickets = store.findAllTickets();
+            int rows = Integer.parseInt(getServletContext().getInitParameter("rows"));
+            int cells = Integer.parseInt(getServletContext().getInitParameter("cells"));
+            int refreshInterval = Integer.parseInt(
+                    getServletContext().getInitParameter("refreshInterval"));
+
+            Collection<Ticket> tickets = STORE.findAllTickets();
             List<String> occupSeats = new ArrayList<>();
             tickets.forEach(t -> occupSeats.add(t.getRow() + "-" + t.getCell()));
             JSONObject jsonObj = new JSONObject()
@@ -61,13 +67,14 @@ public class HallServlet extends HttpServlet {
         resp.setCharacterEncoding("UTF-8");
         JSONObject jsonReq;
         try {
+            int sessionId = Integer.parseInt(getServletContext().getInitParameter("sessionId"));
             jsonReq = new JSONObject(req.getParameterNames().asIterator().next());
             Account account = new Account(0,
                     jsonReq.getString("username"),
                     jsonReq.getString("email"),
                     jsonReq.getString("phone")
             );
-            Ticket ticket = store.save(new Ticket(
+            Optional<Ticket> optTicket = STORE.save(new Ticket(
                     0,
                     sessionId,
                     Integer.parseInt(jsonReq.getString("row")),
@@ -76,7 +83,7 @@ public class HallServlet extends HttpServlet {
             );
             String msg = "К сожалению, место не может быть куплено.";
             int code = 0;
-            if (ticket != null) {
+            if (optTicket.isPresent()) {
                 msg = "Место успешно оплачено!";
                 code = 1;
             }
@@ -89,19 +96,5 @@ public class HallServlet extends HttpServlet {
         } catch (Exception e) {
             LOG.error("Exception occurred: ", e);
         }
-    }
-
-    /**
-     * rows - the number of rows in the cinema hall,
-     * seats - the number of seats in the cinema hall,
-     * sessionId - the movie session id,
-     * refreshInterval - the data retry interval on the client (ms)
-     */
-    @Override
-    public void init() {
-        rows = Integer.parseInt(getServletContext().getInitParameter("rows"));
-        cells = Integer.parseInt(getServletContext().getInitParameter("cells"));
-        sessionId = Integer.parseInt(getServletContext().getInitParameter("sessionId"));
-        refreshInterval = Integer.parseInt(getServletContext().getInitParameter("refreshInterval"));
     }
 }

@@ -4,6 +4,8 @@ import ru.job4j.cinema.model.Account;
 import ru.job4j.cinema.model.Ticket;
 
 import java.util.Collection;
+import java.util.Optional;
+
 /**
  * The interface represents a store for managing accounts and tickets.
  *
@@ -16,9 +18,9 @@ public interface Store {
         return null;
     }
 
-    Account save(Account account);
+    Optional<Account> save(Account account);
 
-    Ticket save(Ticket ticket);
+    Optional<Ticket> save(Ticket ticket);
 
     Collection<Ticket> findAllTickets();
 }
