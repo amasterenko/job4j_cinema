@@ -8,6 +8,8 @@ import ru.job4j.cinema.model.Ticket;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,7 +20,7 @@ import java.util.*;
  * The class implements Store using Postgres db.
  *
  * @author AndrewMs
- * @version 1.0
+ * @version 1.1
  */
 
 public class PsqlStore implements Store {
@@ -27,9 +29,10 @@ public class PsqlStore implements Store {
 
     private PsqlStore() {
         Properties cfg = new Properties();
+        URL res = getClass().getClassLoader().getResource("db.properties");
         try (BufferedReader io = new BufferedReader(
-                new FileReader("db.properties")
-        )) {
+                new FileReader(Paths.get(res.toURI()).toFile()));
+        ) {
             cfg.load(io);
         } catch (Exception e) {
             LOG.error("An exception occurred: ", e);
