@@ -11,7 +11,7 @@ ___
 - JDBC (PostgreSQL)
 - JAVA servlets/JSTL
 - Bootstrap
-- JS/JQuery/AJAX
+- JS/jQuery/AJAX
 - Slf4j
 - Travis CI
 
@@ -25,7 +25,7 @@ ___
 - Failed payment:  
 ![ScreenShot](images/payment3.PNG)  
 
-#### Configure and install
+#### Usage  
 1. Create a DB, run _./src/main/resources/scheme.sql_ script on it.  
 2. Set your DB's parameters in _./src/resources/db.properties.
 
