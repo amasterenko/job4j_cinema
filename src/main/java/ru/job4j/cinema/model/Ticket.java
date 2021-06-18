@@ -1,6 +1,6 @@
 package ru.job4j.cinema.model;
 /**
- * The class represents a ticket
+ * The class represents ticket.
  * @author AndrewMs
  * @version 1.0
  */

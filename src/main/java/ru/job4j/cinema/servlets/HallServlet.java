@@ -17,7 +17,7 @@ import java.util.*;
 /**
  * The servlet returns all the tickets as a json object using doGet.
  * The servlet receives POST-requests with a ticket data as a json object and
- * replies with a message|code.
+ * replies with a message/code pair.
  * If the seat with the specified session and row was already bought
  * the servlet replies with an error message|code.
  * If the message is successful, code 1 is used, on errors - 0.

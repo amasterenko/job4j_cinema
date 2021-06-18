@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
- * The class implements Store using Postgres db.
+ * The class implements Store and uses JDBC for the DB accessing.
  *
  * @author AndrewMs
  * @version 1.1
@@ -90,8 +90,8 @@ public class PsqlStore implements Store {
     }
 
     /**
-     * If the ticket's account is already presents in the db the method
-     * tries to find the existed account using the "phone" field.
+     * If the ticket's account already presents in the db the method
+     * tries to find existed account using the "phone" field.
      *
      * @param ticket Ticket object to save in the db.
      * @return Optional<Ticket> with empty value null if the ticket already presents

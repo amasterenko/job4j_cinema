@@ -1,7 +1,7 @@
 package ru.job4j.cinema.model;
 
 /**
- * The class represents the system's user
+ * The class represents system user.
  * @author AndrewMs
  * @version 1.0
  */
